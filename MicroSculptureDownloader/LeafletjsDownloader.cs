@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.Primitives;
+using Image = SixLabors.ImageSharp.Image;
+using Point = SixLabors.Primitives.Point;
+using Size = SixLabors.Primitives.Size;
 
 namespace MicroSculptureDownloader
 {
@@ -45,6 +50,18 @@ namespace MicroSculptureDownloader
             {
                 // Download tile
                 var data = StaticDependencies.WebClient.DownloadData(url);
+                
+                // Remark: ImageSharp is in beta and sometimes fails to deserialie jpgs
+                // TODO: remove workaround (jpg => bmp)
+                // TODO: go back to .net core
+                using (var jpgStream = new MemoryStream(data))
+                using (var bitmap = System.Drawing.Image.FromStream(jpgStream))
+                using (var bitmapStream = new MemoryStream())
+                {
+                    bitmap.Save(bitmapStream, ImageFormat.Bmp);
+                    data = bitmapStream.ToArray();
+                }
+                
                 // Parse image and dispose of it later
                 using (var tile = Image.Load<Rgb24>(data))
                 {
