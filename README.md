@@ -1,6 +1,10 @@
 # Unofficial MicroSculpture Downloader
 This program assists in downloading the brilliant insect photographs from [MicroSculpture](http://microsculpture.net/).
 
+## Please respect the artist
+Obviously you do not gain any copyright on the pictures by using this software. So do not distribute or sell them!  
+If you enjoy the pictures consider supporting Levon Biss by visiting an exhibition or purchasing his book. You can find more information on [his website](https://www.levonbiss.com/blog/).
+
 ## Usage
 - Download pictures
   - Compile the project for [.Net Framework 4.6.2.](https://www.microsoft.com/en-us/download/details.aspx?id=53344)
