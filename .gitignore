@@ -222,6 +222,8 @@ _Pvt_Extensions
 
 # Download result
 **/download/
+**/trimmed/
+**/wallpaper/
 
 # Windows
 desktop.ini
