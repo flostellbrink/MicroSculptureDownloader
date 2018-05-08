@@ -19,9 +19,6 @@ If you enjoy the pictures consider supporting Levon Biss by visiting an exhibiti
 ## Roadmap
 Even though its sufficient for getting some nice wallpapers, there is some room for improvement.
 
-### Switch to .Net Core 2
-Use ImageSharp exclusively once it is released and reliably parses JPGs. Drop System.Drawing references and switch project back to .Net Core 2.
-
 ### Wallpaper creation
 Creating wallpapers with ImageMagick and scripts works but is not a nice experience.  
 Move trimming and resizing into the program.
