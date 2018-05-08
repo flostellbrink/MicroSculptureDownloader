@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using ShellProgressBar;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -53,32 +54,10 @@ namespace MicroSculptureDownloader
         /// <summary>
         /// Caller needs to dispose image!
         /// </summary>
-        public Image<Rgb24> DownloadImage(int? zoomLevel = null, ZoomModifier zoomModifier = null)
+        public Image<Rgb24> DownloadImage(int? zoomLevel = null, ZoomModifier zoomModifier = null, IProgressBar parentProgressBar = null)
         {
             var modifier = zoomModifier ?? ZoomModifiers.Last();
-            return DownloadImage(zoomLevel ?? ZoomLevels - modifier.Level, modifier);
-        }
-
-        /// <summary>
-        /// Caller needs to dispose image!
-        /// </summary>
-        public Image<Rgb24> DownloadImage(int zoomLevel, ZoomModifier zoomModifier)
-        {
-            if (!ZoomModifiers.Contains(zoomModifier))
-            {
-                throw new ArgumentOutOfRangeException(nameof(zoomModifier));
-            }
-
-            if (zoomLevel + zoomModifier.Level > ZoomLevels)
-            {
-                throw new ArgumentOutOfRangeException(nameof(zoomLevel));
-            }
-
-            // Determine number of tiles for current zoom level & modifier
-            var tileCount =
-                (((TotalSize / zoomModifier.TileSize) - 1) >> (ZoomLevels - zoomLevel - zoomModifier.Level)) + 1;
-
-            return LeafletjsDownloader.Download(UrlGen(zoomLevel, zoomModifier), zoomModifier.TileSize, tileCount * zoomModifier.TileSize);
+            return DownloadImage(zoomLevel ?? ZoomLevels - modifier.Level, modifier, parentProgressBar);
         }
 
         /// <summary>
@@ -98,6 +77,32 @@ namespace MicroSculptureDownloader
 
         private Func<LeafletjsDownloader.TileCoordinates, string> UrlGen(int zoomLevel, ZoomModifier zoomModifier) => tileCoordinates =>
             $"http://microsculpture.net/assets/img/tiles/{TileFolder}/{zoomModifier}/{zoomLevel}/{tileCoordinates.Column}/{tileCoordinates.Row}.jpg";
+
+        /// <summary>
+        /// Caller needs to dispose image!
+        /// </summary>
+        private Image<Rgb24> DownloadImage(int zoomLevel, ZoomModifier zoomModifier, IProgressBar parentProgressBar = null)
+        {
+            if (!ZoomModifiers.Contains(zoomModifier))
+            {
+                throw new ArgumentOutOfRangeException(nameof(zoomModifier));
+            }
+
+            if (zoomLevel + zoomModifier.Level > ZoomLevels)
+            {
+                throw new ArgumentOutOfRangeException(nameof(zoomLevel));
+            }
+
+            // Determine number of tiles for current zoom level & modifier
+            var tileCount =
+                (((TotalSize / zoomModifier.TileSize) - 1) >> (ZoomLevels - zoomLevel - zoomModifier.Level)) + 1;
+
+            return LeafletjsDownloader.Download(
+                UrlGen(zoomLevel, zoomModifier),
+                zoomModifier.TileSize,
+                tileCount * zoomModifier.TileSize,
+                parentProgressBar);
+        }
 
         /// <summary>
         /// Stores the zoom level modifier.

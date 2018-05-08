@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using ShellProgressBar;
 using SixLabors.ImageSharp;
 
 namespace MicroSculptureDownloader
@@ -25,61 +27,83 @@ namespace MicroSculptureDownloader
                 "white-short-nosed-weevil", "stag-beetle", "iridescent-bark-mantis", "dead-leaf-grasshopper",
             };
 
-            // See if all of them exist
-            Console.WriteLine("Verifying insects");
-
-            Parallel.ForEach(
-                insects,
-                insect => Console.WriteLine($"{insect}: {new MicroSculptureImage(insect).TileFolder}"));
-
-            Console.WriteLine("Looks good, start downloading");
-
-            // Create download folder
-            const string downloadFolder = "download";
-            Directory.CreateDirectory(downloadFolder);
-
-            // Download images for all insects
-            var index = 0;
-            foreach (var insect in insects)
+            const int subSteps = 2;
+            using (var progressBar = new ProgressBar(subSteps, "Verifying insect list"))
             {
-                try
+                // See if all of them exist
+                using (var verificationProgressBar = progressBar.Spawn(insects.Length, "Verifying insects"))
                 {
-                    Console.WriteLine($"{++index}/{insects.Length} Locating {insect}");
-                    DownloadAll(insect, downloadFolder);
+                    Parallel.ForEach(
+                        insects,
+                        insect =>
+                        {
+                            verificationProgressBar.Tick($"{insect}: {new MicroSculptureImage(insect).TileFolder}");
+                        });
                 }
-                catch (Exception exception)
+
+                progressBar.Tick("Downloading all insects");
+
+                // Create download folder
+                const string downloadFolder = "download";
+                Directory.CreateDirectory(downloadFolder);
+
+                // Download images for all insects
+                using (var downloadProgressBar = progressBar.Spawn(insects.Length, "Downloading all insects"))
                 {
-                    Console.WriteLine($"Failed to download entire insect: {insect} - {exception.Message}");
+                    foreach (var insect in insects)
+                    {
+                        try
+                        {
+                            downloadProgressBar.Tick($"Downloading {insect}");
+                            DownloadAllSizes(insect, downloadFolder, downloadProgressBar);
+                        }
+                        catch (Exception exception)
+                        {
+                            Console.WriteLine($"Failed to download entire insect: {insect} - {exception.Message}");
+                        }
+                    }
                 }
+
+                progressBar.Tick("Download finished");
             }
         }
 
         /// <summary>
         /// Download all image sizes for a specific insect
         /// </summary>
-        private static void DownloadAll(string insect, string downloadFolder)
+        private static void DownloadAllSizes(string insect, string downloadFolder, IProgressBar parentProgressBar = null)
         {
             var downloader = new MicroSculptureImage(insect);
-            Console.WriteLine($"Downloading {insect} from {downloader.TileFolder} with {downloader.ZoomLevels - 1} zoom levels.");
-            foreach (var level in downloader.GetLevels())
-            {
-                try
-                {
-                    using (var image = downloader.DownloadImage(level))
-                    using (var stream = new FileStream($"{downloadFolder}/{downloader.TileFolder}-{level}.png", FileMode.Create))
-                    {
-                        Console.Write($"\tSaving {downloader.TileFolder}-{level}.png ... ");
-                        image.SaveAsPng(stream);
-                        Console.WriteLine("done");
-                    }
+            var levels = downloader.GetLevels().ToList();
 
-                    // Collect image, we don't want to look like we are hogging >>4 gigs
-                    GC.Collect();
-                }
-                catch (Exception exception)
+            var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
+            using (var progressBar = parentProgressBar?.Spawn(levels.Count * 2, $"Downloading {insect}.", progressOptions))
+            {
+                foreach (var level in levels)
                 {
-                    Console.WriteLine($"Failed to download image for insect {insect} on level {level}- {exception.Message}");
+                    try
+                    {
+                        progressBar?.Tick($"Downloading {insect} at level {level}");
+                        using (var image = downloader.DownloadImage(level, null, progressBar))
+                        using (var stream = new FileStream(
+                            $"{downloadFolder}/{downloader.TileFolder}-{level}.png",
+                            FileMode.Create))
+                        {
+                            progressBar?.Tick($"Saving {downloader.TileFolder}-{level}.png");
+                            image.SaveAsPng(stream);
+                        }
+
+                        // Collect image, we don't want to look like we are hogging >>4 gigs
+                        GC.Collect();
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(
+                            $"Failed to download image for insect {insect} on level {level}- {exception.Message}");
+                    }
                 }
+
+                progressBar?.Tick($"Downloaded {insect}");
             }
         }
     }

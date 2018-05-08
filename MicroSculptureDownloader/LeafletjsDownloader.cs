@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using ShellProgressBar;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -22,35 +23,27 @@ namespace MicroSculptureDownloader
         /// <summary>
         /// Caller needs to dispose image!
         /// </summary>
-        public static Image<Rgb24> Download(Func<TileCoordinates, string> urlGenerator, int tileSize, int totalSize)
+        public static Image<Rgb24> Download(Func<TileCoordinates, string> urlGenerator, int tileSize, int totalSize, IProgressBar parentProgressBar = null)
         {
             var result = new Image<Rgb24>(totalSize, totalSize);
             var tileCount = totalSize / tileSize;
 
-            Console.Write("Loading [");
-            double done = 0.0, step = (tileCount * tileCount) / 100.0;
-            var progressBarLock = new object();
-
             var rows = Enumerable.Range(start: 0, count: tileCount);
             var columns = Enumerable.Range(start: 0, count: tileCount);
-            var tiles = rows.SelectMany(row => columns.Select(column => new TileCoordinates { Row = row, Column = column }));
+            var tiles = rows
+                       .SelectMany(row => columns.Select(column => new TileCoordinates { Row = row, Column = column }))
+                       .ToList();
 
             // Iterate over all tiles
-            Parallel.ForEach(tiles, ParallelOptions, tile =>
+            using (var progressBar = parentProgressBar?.Spawn(tiles.Count, "Downloading tiles"))
             {
-                WriteTile(tile, urlGenerator(tile), tileSize, result);
-                lock (progressBarLock)
+                Parallel.ForEach(tiles, ParallelOptions, tile =>
                 {
-                    done++;
-                    while (done >= step)
-                    {
-                        done -= step;
-                        Console.Write(".");
-                    }
-                }
-            });
+                    WriteTile(tile, urlGenerator(tile), tileSize, result);
+                    progressBar?.Tick();
+                });
+            }
 
-            Console.WriteLine("]");
             return result;
         }
 
