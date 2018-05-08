@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 
 namespace MicroSculptureDownloader
@@ -24,10 +25,10 @@ namespace MicroSculptureDownloader
 
             // See if all of them exist
             Console.WriteLine("Verifying insects");
-            foreach (var insect in insects.AsParallel())
-            {
-                Console.WriteLine($"{insect}: {new MircroSculptureImage(insect).TileFolder}");
-            }
+
+            Parallel.ForEach(insects,
+                insect => Console.WriteLine($"{insect}: {new MircroSculptureImage(insect).TileFolder}"));
+
             Console.WriteLine("Looks good, start downloading");
 
             // Create download folder

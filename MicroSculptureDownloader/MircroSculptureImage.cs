@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -21,7 +22,7 @@ namespace MicroSculptureDownloader
         
         public MircroSculptureImage(string imageName)
         {
-            var html = StaticDependencies.WebClient.DownloadString($"http://microsculpture.net/{imageName}.html");
+            var html = new WebClient().DownloadString($"http://microsculpture.net/{imageName}.html");
             const string pattern = "<div id=\"zoomTool\"[^>]*" +
                                    "data-map-bounds=\"(?<mapBounds>[^\"]*)\"[^>]*" +
                                    "data-tile-folder=\"(?<tileFolder>[^\"]*)\"[^>]*" +
@@ -54,8 +55,8 @@ namespace MicroSculptureDownloader
             // Determine number of tiles for current zoom level & modifier
             var tileCount = ((TotalSize / zoomModifier.TileSize - 1)  >> (ZoomLevels - zoomLevel - zoomModifier.Level)) + 1;
             
-            string UrlGen(int row, int col) =>
-                $"http://microsculpture.net/assets/img/tiles/{TileFolder}/{zoomModifier}/{zoomLevel}/{col}/{row}.jpg";
+            string UrlGen(LeafletjsDownloader.TileCoordinates tileCoordinates) =>
+                $"http://microsculpture.net/assets/img/tiles/{TileFolder}/{zoomModifier}/{zoomLevel}/{tileCoordinates.Column}/{tileCoordinates.Row}.jpg";
             return LeafletjsDownloader.Download(UrlGen, zoomModifier.TileSize, tileCount * zoomModifier.TileSize);
         }
 
