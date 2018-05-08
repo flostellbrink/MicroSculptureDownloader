@@ -23,48 +23,39 @@ namespace MicroSculptureDownloader
             const string downloadFolder = "download";
             Directory.CreateDirectory(downloadFolder);
 
-            // Download images for all insects
-            using (var downloadProgressBar = new ProgressBar(Cache.InsectList.Count, "Downloading all insects"))
+            using (var progressBar = new ProgressBar(2, "Collecting resolutions for all insects"))
             {
-                foreach (var insect in Cache.InsectList)
+                // Get all zoom levels
+                var allLevels = Cache.InsectList.Select(Cache.GetDownloader)
+                                     .SelectMany(loader => loader.GetLevels())
+                                     .Distinct()
+                                     .OrderBy(level => level)
+                                     .ToList();
+                progressBar.Tick("Downloading images for all levels");
+
+                // Download by zoom levels
+                using (var downloadProgressBar = progressBar.Spawn(allLevels.Count, string.Empty))
                 {
-                    try
+                    foreach (var level in allLevels)
                     {
-                        downloadProgressBar.Tick($"Downloading {insect}");
-                        DownloadAllSizes(insect, downloadProgressBar);
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine($"Failed to download entire insect: {insect} - {exception.Message}");
+                        downloadProgressBar.Tick($"Downloading resolution {level}");
+
+                        var insects = Cache.InsectList
+                                           .Where(insect => Cache.GetDownloader(insect).GetLevels().Contains(level))
+                                           .ToList();
+
+                        var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
+                        using (var levelProgressBar = downloadProgressBar.Spawn(insects.Count * 2, string.Empty, progressOptions))
+                        {
+                            foreach (var insect in insects)
+                            {
+                                Cache.Get(insect, level, false, levelProgressBar);
+                            }
+
+                            levelProgressBar.Tick($"Downloaded resolution {level}");
+                        }
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Download all image sizes for a specific insect
-        /// </summary>
-        private static void DownloadAllSizes(string insect, IProgressBar parentProgressBar = null)
-        {
-            var levels = Cache.GetDownloader(insect).GetLevels().ToList();
-
-            var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
-            using (var progressBar = parentProgressBar?.Spawn(levels.Count * 2, $"Downloading {insect}.", progressOptions))
-            {
-                foreach (var level in levels)
-                {
-                    try
-                    {
-                        Cache.Get(insect, level, false, progressBar);
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine(
-                            $"Failed to download image for insect {insect} on level {level}- {exception.Message}");
-                    }
-                }
-
-                progressBar?.Tick($"Downloaded {insect}");
             }
         }
     }
