@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using ShellProgressBar;
 
@@ -21,7 +20,7 @@ namespace MicroSculptureDownloader
         {
             // Create download folder
             const string downloadFolder = "download";
-            Directory.CreateDirectory(downloadFolder);
+            
 
             using (var progressBar = new ProgressBar(2, "Collecting resolutions for all insects"))
             {

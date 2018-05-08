@@ -21,6 +21,7 @@ namespace MicroSculptureDownloader
         /// <param name="cacheDirectory">Directory to cache images in</param>
         public ImageCache(string cacheDirectory = "download")
         {
+            Directory.CreateDirectory(cacheDirectory);
             CacheDirectory = cacheDirectory;
             var homePage = new WebClient().DownloadString("http://microsculpture.net/");
             var insectPattern = "<a href=\"(?<insect>[a-z\\-]+)\\.html\">";

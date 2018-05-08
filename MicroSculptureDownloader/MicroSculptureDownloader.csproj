@@ -8,7 +8,7 @@
   </PropertyGroup>
     
   <ItemGroup>
-    <AdditionalFiles Include="stylecop.json" />
+    <AdditionalFiles Include="Properties\stylecop.json" />
   </ItemGroup>
     
   <ItemGroup>
@@ -16,5 +16,15 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta006" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <Folder Include="Wallpaper\" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <None Update="Properties\App.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
