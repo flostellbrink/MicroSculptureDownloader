@@ -1,14 +1,16 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 
 namespace MicroSculptureDownloader
 {
-    class Program
+    /// <summary>
+    /// The program entry point.
+    /// </summary>
+    public class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // Define list of insects on microSculptures.net (by hand)
             var insects = new[]
@@ -20,21 +22,22 @@ namespace MicroSculptureDownloader
                 "green-tiger-beetle", "common-reed-beetle", "lantern-bug", "mantis-fly",
                 "amazonian-purple-warrior-scarab", "paris-peacock", "pleasing-fungus-beetle", "potter-wasp",
                 "ruby-tailed-wasp", "shield-bug", "silver-longhorn-beetle", "stalk-eyed-fly",
-                "white-short-nosed-weevil", "stag-beetle", "iridescent-bark-mantis", "dead-leaf-grasshopper"
+                "white-short-nosed-weevil", "stag-beetle", "iridescent-bark-mantis", "dead-leaf-grasshopper",
             };
 
             // See if all of them exist
             Console.WriteLine("Verifying insects");
 
-            Parallel.ForEach(insects,
-                insect => Console.WriteLine($"{insect}: {new MircroSculptureImage(insect).TileFolder}"));
+            Parallel.ForEach(
+                insects,
+                insect => Console.WriteLine($"{insect}: {new MicroSculptureImage(insect).TileFolder}"));
 
             Console.WriteLine("Looks good, start downloading");
 
             // Create download folder
             const string downloadFolder = "download";
             Directory.CreateDirectory(downloadFolder);
-            
+
             // Download images for all insects
             var index = 0;
             foreach (var insect in insects)
@@ -56,7 +59,7 @@ namespace MicroSculptureDownloader
         /// </summary>
         private static void DownloadAll(string insect, string downloadFolder)
         {
-            var downloader = new MircroSculptureImage(insect);
+            var downloader = new MicroSculptureImage(insect);
             Console.WriteLine($"Downloading {insect} from {downloader.TileFolder} with {downloader.ZoomLevels - 1} zoom levels.");
             foreach (var level in downloader.GetLevels())
             {
@@ -69,7 +72,7 @@ namespace MicroSculptureDownloader
                         image.SaveAsPng(stream);
                         Console.WriteLine("done");
                     }
-                    
+
                     // Collect image, we don't want to look like we are hogging >>4 gigs
                     GC.Collect();
                 }

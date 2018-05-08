@@ -8,15 +8,17 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Drawing;
 using Image = SixLabors.ImageSharp.Image;
 using Point = SixLabors.Primitives.Point;
-using Size = SixLabors.Primitives.Size;
 
 namespace MicroSculptureDownloader
 {
+    /// <summary>
+    /// Downloads images or maps from any leaflet js powered website. https://leafletjs.com/
+    /// </summary>
     public class LeafletjsDownloader
     {
         // TODO: we need to limit the number of parallel downloads. 4 is hardcoded for now.
-        private static readonly ParallelOptions ParallelOptions = new ParallelOptions{MaxDegreeOfParallelism = 4};
-      
+        private static readonly ParallelOptions ParallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+
         /// <summary>
         /// Caller needs to dispose image!
         /// </summary>
@@ -76,10 +78,19 @@ namespace MicroSculptureDownloader
             }
         }
 
+        /// <summary>
+        /// Coordinates of a single leaflet tile.
+        /// </summary>
         public struct TileCoordinates
         {
+            /// <summary>
+            /// Gets or sets the row index of a tile.
+            /// </summary>
             public int Row { get; set; }
 
+            /// <summary>
+            /// Gets or sets the column index of a tile.
+            /// </summary>
             public int Column { get; set; }
         }
     }
