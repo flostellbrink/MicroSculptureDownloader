@@ -38,8 +38,8 @@ namespace MicroSculptureDownloader
         [Option("-r|--resolutions", Description = "List all resolutions.")]
         private bool ListResolutions { get; }
 
-        [Option("-g|--generate", Description = "Whether to generate wallpapers.")]
-        private bool WallpaperGenerate { get; }
+        [Option("-g|--generate", Description = "Whether to generate wallpapers. (Defaults to true)")]
+        private bool WallpaperGenerate { get; } = true;
 
         [Option("-w|--width", Description = "Width of generated wallpapers. (Defaults to 3840)")]
         private int WallpaperWidth { get; } = 3840;

@@ -6,28 +6,37 @@ Obviously you do not gain any copyright on the pictures by using this software. 
 If you enjoy the pictures consider supporting Levon Biss by visiting an exhibition or purchasing his book. You can find more information on [his website](https://www.levonbiss.com/blog/).
 
 ## Usage
-- Download pictures
-  - Compile the project for [.Net Framework 4.6.2.](https://www.microsoft.com/en-us/download/details.aspx?id=53344)
-  - Execute to download all insect images listed in Program.cs
-- Create wallpapers (Linux scripts only, sorry)
-  - Install [ImageMagick](https://www.imagemagick.org)
-  - Navigate into "MicroSculptureDownloader" folder
-  - Trim pictures using "trim_pictures.sh"
-  - Create wallpaper using "make_wallpapers.sh"
-    - Supply wallpaper size as first argument like "1920x1080"
+- Install [.Net Core](https://www.microsoft.com/net/learn/get-started/)
+- Navigate into `MicroSculptureDownloader` folder
+- Start the project with `dotnet run`
 
-## Roadmap
-Even though its sufficient for getting some nice wallpapers, there is some room for improvement.
+### Behaviour
+By default the program will generate evenly cropped 4k wallpaper with a 100px border.
 
-### Wallpaper creation
-Creating wallpapers with ImageMagick and scripts works but is not a nice experience.  
-Move trimming and resizing into the program.
+Images are only downloaded once, and then loaded from disk. To override this behaviour use the `--force` switch.
 
-### CLI/GUI
-Changes in functionality have to be hard coded right now. Some core functionality should be accessible by CLI/GUI:
-- Download with insect name and resolution option
-- Batch download with list of insects/resolutions
-- Options to download all insects/resolutions
-- Option to specify output image format
-- Allow trimming
-- Allow resizing & wallpaper creation
+If you don't supply a resolution level and let the program generate a wallpaper, it will automatically find an appropriate resolution to download.
+
+### CLI
+These are the complete options:
+
+```
+Unofficial downloader for the brilliant insect photographs on http://microsculpture.net/
+
+Usage: MicroSculptureDownloader [arguments] [options]
+
+Arguments:
+  insect            Insect to download
+
+Options:
+  -?|--help         Show help information
+  -f|--force        Skip cache and force downloads.
+  -l|--level        Request specific image resolution.
+  -L|--list         List all insects.
+  -r|--resolutions  List all resolutions.
+  -g|--generate     Whether to generate wallpapers. (Defaults to true)
+  -w|--width        Width of generated wallpapers. (Defaults to 3840)
+  -h|--height       Height of generated wallpapers. (Defaults to 2160)
+  -t|--trim         Whether to trim wallpapers, i.e. remove borders. (Defaults to true)
+  -b|--border       Uniform border around wallpaper. (Defaults to 100)
+```
