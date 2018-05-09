@@ -1,7 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using McMaster.Extensions.CommandLineUtils;
+using MicroSculptureDownloader.Extension;
 using ShellProgressBar;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Drawing;
+using SixLabors.ImageSharp.Processing.Transforms;
 
 namespace MicroSculptureDownloader
 {
@@ -9,33 +16,52 @@ namespace MicroSculptureDownloader
     /// The program entry point.
     /// </summary>
     [Command(Name = "MicroSculptureDownloader", Description = "Unofficial downloader for the brilliant insect photographs on http://microsculpture.net/")]
-    [HelpOption("-?|-h|--help")]
+    [HelpOption("-?|--help")]
     public class Program
     {
         private static readonly ImageCache Cache = new ImageCache();
 
+        private static readonly WallpaperCreator Creator = new WallpaperCreator();
+
         [Argument(order: 0, Name = "insect", Description = "Insect to download")]
         private string Insect { get; }
-
-        [Option("-a|--all", Description = "Download all images.")]
-        private bool AllDownload { get; }
 
         [Option("-f|--force", Description = "Skip cache and force downloads.")]
         private bool ForceDownload { get; }
 
         [Option("-l|--level", Description = "Request specific image resolution.")]
-        private int? Level { get; }
+        private int? Level { get; set; }
 
         [Option("-L|--list", Description = "List all insects.")]
         private bool ListInsects { get; }
 
-        [Option("-r|--resolutions", Description = "List all resolutions. Requires -a or insect to be set.")]
+        [Option("-r|--resolutions", Description = "List all resolutions.")]
         private bool ListResolutions { get; }
+
+        [Option("-g|--generate", Description = "Whether to generate wallpapers.")]
+        private bool WallpaperGenerate { get; }
+
+        [Option("-w|--width", Description = "Width of generated wallpapers. (Defaults to 3840)")]
+        private int WallpaperWidth { get; } = 3840;
+
+        [Option("-h|--height", Description = "Height of generated wallpapers. (Defaults to 2160)")]
+        private int WallpaperHeight { get; } = 2160;
+
+        [Option("-t|--trim", Description = "Whether to trim wallpapers, i.e. remove black borders.")]
+        private bool WallpaperTrim { get; }
 
         private static void Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
         private void OnExecute(CommandLineApplication app)
         {
+            // Check parameters
+            if (WallpaperWidth <= 0 || WallpaperHeight <= 0)
+            {
+                app.Error.WriteLine("Wallpaper width and height need to be positive.");
+                app.ShowHint();
+                return;
+            }
+
             // List all insects
             if (ListInsects)
             {
@@ -48,11 +74,12 @@ namespace MicroSculptureDownloader
             }
 
             // All other commands require a list of insects to work on
-            if (!TryGetInsects(app, out var insectNames))
+            if (!TryGetInsects(app, out var insectNames) || !insectNames.Any())
             {
                 return;
             }
 
+            // List all resolutions for each selected insect
             if (ListResolutions)
             {
                 var maxWidth = insectNames.Select(name => name.Length).Max();
@@ -64,26 +91,35 @@ namespace MicroSculptureDownloader
                 return;
             }
 
-            /* TODO if level is not specified, but wallpaper size is, choose appropriate level */
-            var insects = Download(AllDownload ? Cache.InsectList : insectNames).ToList();
+            /*
+             * Find an appropriate quality level for wallpaper generation
+             * This is just a heuristic, because:
+             * - When trimming, the resolution might drop under the given size.
+             * - Different images might have different quality definitions.
+             */
+            if (!Level.HasValue && WallpaperGenerate)
+            {
+                var dummyDownloader = Cache.GetDownloader(insectNames.First());
+                Level = dummyDownloader.WallpaperLevel(WallpaperWidth, WallpaperHeight);
+            }
 
-            /* TODO handle wallpaper creation for list of insects */
+            // Download all selected insects
+            var insects = Download(insectNames).ToList();
+
+            // Create wallpapers
+            if (WallpaperGenerate)
+            {
+                var sources = insectNames.Zip(insects, WallpaperSource.Create).ToList();
+                Creator.CreateWallpapers(sources, WallpaperWidth, WallpaperHeight, WallpaperTrim);
+            }
         }
 
         private bool TryGetInsects(CommandLineApplication app, out IReadOnlyCollection<string> insectNames)
         {
-            if (AllDownload)
+            if (string.IsNullOrWhiteSpace(Insect))
             {
                 insectNames = Cache.InsectList;
                 return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(Insect))
-            {
-                app.Error.WriteLine("Error: Either -a or insect has to be set.\n");
-                app.ShowHelp();
-                insectNames = null;
-                return false;
             }
 
             if (!Cache.InsectList.Contains(Insect.ToLower().Trim()))

@@ -91,6 +91,17 @@ namespace MicroSculptureDownloader
             return Enumerable.Range(start: 0, count: MaxZoomLevels - zoomModifier.Level + 1).ToList();
         }
 
+        /// <summary>
+        /// Get a resolution level, that is appropriate for a given wallpaper resolution.
+        /// </summary>
+        public int WallpaperLevel(int width, int height)
+        {
+            var maxDimension = Math.Max(width, height);
+            var modifier = ZoomModifiers.Last();
+            var result = GetLevels(modifier).Where(level => TileCount(level, modifier) * modifier.TileSize > maxDimension).ToList();
+            return result.Any() ? result.First() : GetLevels().Last();
+        }
+
         private Func<LeafletjsDownloader.TileCoordinates, string> UrlGen(int zoomLevel, ZoomModifier zoomModifier) => tileCoordinates =>
             $"http://microsculpture.net/assets/img/tiles/{TileFolder}/{zoomModifier}/{zoomLevel}/{tileCoordinates.Column}/{tileCoordinates.Row}.jpg";
 

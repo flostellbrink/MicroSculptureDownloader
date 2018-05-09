@@ -61,7 +61,7 @@ namespace MicroSculptureDownloader
                     var location = new Point(tileCoordinates.Column * tileSize, tileCoordinates.Row * tileSize);
                     lock (result)
                     {
-                        result.Mutate(r => r.DrawImage(GraphicsOptions.Default, tile, location));
+                        result.Mutate(context => context.DrawImage(GraphicsOptions.Default, tile, location));
                     }
                 }
             }
