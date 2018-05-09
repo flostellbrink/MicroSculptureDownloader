@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using ShellProgressBar;
 using SixLabors.ImageSharp;
@@ -6,7 +7,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Drawing;
 using SixLabors.ImageSharp.Processing.Transforms;
-using SixLabors.Primitives;
 
 namespace MicroSculptureDownloader.Extension
 {
@@ -32,46 +32,58 @@ namespace MicroSculptureDownloader.Extension
         /// <summary>
         /// Create a wallpaper from a downloaded image.
         /// </summary>
-        public void CreateWallpapers(ICollection<WallpaperSource> sources, int width, int height, bool trim)
+        public void CreateWallpapers(ICollection<WallpaperSource> sources, int width, int height, bool trim, int border)
         {
             using (var progressBar = new ProgressBar(sources.Count + 1, string.Empty))
             {
                 foreach (var insect in sources)
                 {
                     progressBar.Tick($"Creating wallpaper for {insect.Name}");
-
-                    var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
-                    using (var wallpaperProgressBar = progressBar.Spawn(3, "Loading image", progressOptions))
+                    try
                     {
-                        var trimmed = trim ? "trimmed" : "full";
-                        var wallpaperPath = $"{WallpaperDirectory}/{insect.Name}_{width}x{height}_{trimmed}.png";
-
-                        using (var inputFile = new FileStream(insect.Path, FileMode.Open))
-                        using (var inputImage = Image.Load<Rgb24>(inputFile))
-                        using (var outputImage = new Image<Rgb24>(width, height))
-                        using (var outputFile = new FileStream(wallpaperPath, FileMode.Create))
+                        var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
+                        using (var wallpaperProgressBar = progressBar.Spawn(trim ? 4 : 3, "Loading image", progressOptions))
                         {
-                            // TODO trim image
-                            wallpaperProgressBar.Tick("Resizing source image");
-                            ResizeSource(inputImage, width, height);
+                            var trimmed = trim ? "trimmed" : "full";
+                            var wallpaperPath = $"{WallpaperDirectory}/{insect.Name}_{width}x{height}_{border}_{trimmed}.png";
 
-                            wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
-                            var offset = (outputImage.Size() - inputImage.Size()) / 2;
-                            outputImage.Mutate(context =>
-                                context.DrawImage(GraphicsOptions.Default, inputImage, new Point(offset)));
-                            outputImage.SaveAsPng(outputFile);
+                            using (var inputFile = new FileStream(insect.Path, FileMode.Open))
+                            using (var inputImage = Image.Load<Rgb24>(inputFile))
+                            using (var outputImage = new Image<Rgb24>(width, height))
+                            using (var outputFile = new FileStream(wallpaperPath, FileMode.Create))
+                            {
+                                if (trim)
+                                {
+                                    wallpaperProgressBar.Tick("Trimming source image");
+                                    inputImage.Mutate(context => context.EntropyCrop(0.01f));
+                                }
+
+                                wallpaperProgressBar.Tick("Resizing source image");
+                                ResizeSource(inputImage, width, height, border);
+
+                                wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
+                                outputImage.Mutate(context =>
+                                    context.DrawImage(GraphicsOptions.Default, inputImage));
+                                outputImage.SaveAsPng(outputFile);
+                            }
                         }
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine($"Error in wallpaper {insect.Name} from {insect.Path} - {exception.Message}");
                     }
                 }
             }
         }
 
-        private void ResizeSource(Image<Rgb24> source, int width, int height)
+        private void ResizeSource(Image<Rgb24> source, int width, int height, int border)
         {
-            // TODO add border
             var factor = width / (double)source.Width;
             factor = source.Height * factor > height ? height / (double)source.Height : factor;
-            source.Mutate(context => context.Resize((int)(source.Width * factor), (int)(source.Height * factor)));
+
+            source.Mutate(context => context
+                                    .Resize((int)(source.Width * factor) - (2 * border), (int)(source.Height * factor) - (2 * border))
+                                    .Pad(width, height));
         }
     }
 }

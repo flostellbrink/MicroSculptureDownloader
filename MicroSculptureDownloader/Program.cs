@@ -47,8 +47,11 @@ namespace MicroSculptureDownloader
         [Option("-h|--height", Description = "Height of generated wallpapers. (Defaults to 2160)")]
         private int WallpaperHeight { get; } = 2160;
 
-        [Option("-t|--trim", Description = "Whether to trim wallpapers, i.e. remove black borders.")]
-        private bool WallpaperTrim { get; }
+        [Option("-t|--trim", Description = "Whether to trim wallpapers, i.e. remove borders. (Defaults to true)")]
+        private bool WallpaperTrim { get; } = true;
+
+        [Option("-b|--border", Description = "Uniform border around wallpaper. (Defaults to 100)")]
+        private int WallpaperBorder { get; } = 100;
 
         private static void Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
@@ -58,6 +61,13 @@ namespace MicroSculptureDownloader
             if (WallpaperWidth <= 0 || WallpaperHeight <= 0)
             {
                 app.Error.WriteLine("Wallpaper width and height need to be positive.");
+                app.ShowHint();
+                return;
+            }
+
+            if (WallpaperBorder <= 0 || WallpaperBorder >= WallpaperWidth || WallpaperBorder >= WallpaperHeight)
+            {
+                app.Error.WriteLine("Wallpaper border must be positive and cannot be larger than the width or height.");
                 app.ShowHint();
                 return;
             }
@@ -110,7 +120,7 @@ namespace MicroSculptureDownloader
             if (WallpaperGenerate)
             {
                 var sources = insectNames.Zip(insects, WallpaperSource.Create).ToList();
-                Creator.CreateWallpapers(sources, WallpaperWidth, WallpaperHeight, WallpaperTrim);
+                Creator.CreateWallpapers(sources, WallpaperWidth, WallpaperHeight, WallpaperTrim, WallpaperBorder);
             }
         }
 
