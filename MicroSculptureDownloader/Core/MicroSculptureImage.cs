@@ -31,12 +31,23 @@ namespace MicroSculptureDownloader
             TileFolder = match.Groups["tileFolder"].Value;
             TotalSize = int.Parse(match.Groups["mapBounds"].Value);
             ZoomLevels = int.Parse(match.Groups["maxZoom"].Value);
+
+            MaxZoomLevels = ZoomLevels;
+            while (!ValidZoomLevel(MaxZoomLevels - ZoomModifiers.Last().Level, ZoomModifiers.Last()))
+            {
+                MaxZoomLevels--;
+            }
         }
 
         /// <summary>
         /// Gets the number of supported zoom levels.
         /// </summary>
         public int ZoomLevels { get; }
+
+        /// <summary>
+        /// Gets the number of supported zoom levels that do not lead to integer overflow.
+        /// </summary>
+        public int MaxZoomLevels { get; }
 
         /// <summary>
         /// Gets the directory where tiles are stored.
@@ -57,14 +68,19 @@ namespace MicroSculptureDownloader
         public Image<Rgb24> DownloadImage(int? zoomLevel = null, ZoomModifier zoomModifier = null, IProgressBar parentProgressBar = null)
         {
             var modifier = zoomModifier ?? ZoomModifiers.Last();
-            return DownloadImage(zoomLevel ?? ZoomLevels - modifier.Level, modifier, parentProgressBar);
+            if (zoomLevel < 0 || zoomLevel > MaxZoomLevels - modifier.Level)
+            {
+                throw new ArgumentOutOfRangeException(nameof(zoomLevel));
+            }
+
+            return DownloadImage(zoomLevel ?? MaxZoomLevels - modifier.Level, modifier, parentProgressBar);
         }
 
         /// <summary>
         /// Get the list of all supported zoom levels.
         /// </summary>
         /// <param name="zoomModifier">The modifier to use for zoom levels</param>
-        public IEnumerable<int> GetLevels(ZoomModifier zoomModifier = null)
+        public ICollection<int> GetLevels(ZoomModifier zoomModifier = null)
         {
             zoomModifier = zoomModifier ?? ZoomModifiers.Last();
             if (!ZoomModifiers.Contains(zoomModifier))
@@ -72,7 +88,7 @@ namespace MicroSculptureDownloader
                 throw new ArgumentOutOfRangeException(nameof(zoomModifier));
             }
 
-            return Enumerable.Range(start: 0, count: ZoomLevels - zoomModifier.Level + 1);
+            return Enumerable.Range(start: 0, count: MaxZoomLevels - zoomModifier.Level + 1).ToList();
         }
 
         private Func<LeafletjsDownloader.TileCoordinates, string> UrlGen(int zoomLevel, ZoomModifier zoomModifier) => tileCoordinates =>
@@ -93,15 +109,37 @@ namespace MicroSculptureDownloader
                 throw new ArgumentOutOfRangeException(nameof(zoomLevel));
             }
 
-            // Determine number of tiles for current zoom level & modifier
-            var tileCount =
-                (((TotalSize / zoomModifier.TileSize) - 1) >> (ZoomLevels - zoomLevel - zoomModifier.Level)) + 1;
+            var totalSize = TileCount(zoomLevel, zoomModifier) * zoomModifier.TileSize;
+            return LeafletjsDownloader.Download(UrlGen(zoomLevel, zoomModifier), zoomModifier.TileSize, totalSize, parentProgressBar);
+        }
 
-            return LeafletjsDownloader.Download(
-                UrlGen(zoomLevel, zoomModifier),
-                zoomModifier.TileSize,
-                tileCount * zoomModifier.TileSize,
-                parentProgressBar);
+        /// <summary>
+        /// Determine number of tiles for zoom level and modifier.
+        /// </summary>
+        private int TileCount(int zoomLevel, ZoomModifier zoomModifier)
+        {
+            return (((TotalSize / zoomModifier.TileSize) - 1) >> (ZoomLevels - zoomLevel - zoomModifier.Level)) + 1;
+        }
+
+        /// <summary>
+        /// We currently have a limitation on the maximum image size.
+        /// ImageSharp and its array allocation is based on <see cref="int"/>. I.e. 32bit signed types.
+        /// The entire image is stored in one array, if that gets bigger than this limit, everything breaks.
+        /// This method allows filtering zoom levels before they break later on.
+        /// </summary>
+        private bool ValidZoomLevel(int zoomLevel, ZoomModifier zoomModifier)
+        {
+            var size = TileCount(zoomLevel, zoomModifier) * zoomModifier.TileSize;
+            try
+            {
+                // 3 Bytes in Rgb24. Check for overflow
+                var test = checked(size * size * 3);
+                return test > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

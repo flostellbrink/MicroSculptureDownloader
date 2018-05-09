@@ -1,5 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
+using McMaster.Extensions.CommandLineUtils;
 using ShellProgressBar;
 
 namespace MicroSculptureDownloader
@@ -7,48 +8,135 @@ namespace MicroSculptureDownloader
     /// <summary>
     /// The program entry point.
     /// </summary>
+    [Command(Name = "MicroSculptureDownloader", Description = "Unofficial downloader for the brilliant insect photographs on http://microsculpture.net/")]
+    [HelpOption("-?|-h|--help")]
     public class Program
     {
         private static readonly ImageCache Cache = new ImageCache();
 
-        private static void Main(string[] args)
+        [Argument(order: 0, Name = "insect", Description = "Insect to download")]
+        private string Insect { get; }
+
+        [Option("-a|--all", Description = "Download all images.")]
+        private bool AllDownload { get; }
+
+        [Option("-f|--force", Description = "Skip cache and force downloads.")]
+        private bool ForceDownload { get; }
+
+        [Option("-l|--level", Description = "Request specific image resolution.")]
+        private int? Level { get; }
+
+        [Option("-L|--list", Description = "List all insects.")]
+        private bool ListInsects { get; }
+
+        [Option("-r|--resolutions", Description = "List all resolutions. Requires -a or insect to be set.")]
+        private bool ListResolutions { get; }
+
+        private static void Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+
+        private void OnExecute(CommandLineApplication app)
         {
-            DownloadAll();
+            // List all insects
+            if (ListInsects)
+            {
+                foreach (var insect in Cache.InsectList)
+                {
+                    app.Out.WriteLine(insect);
+                }
+
+                return;
+            }
+
+            // All other commands require a list of insects to work on
+            if (!TryGetInsects(app, out var insectNames))
+            {
+                return;
+            }
+
+            if (ListResolutions)
+            {
+                var maxWidth = insectNames.Select(name => name.Length).Max();
+                foreach (var insectName in insectNames)
+                {
+                    app.Out.WriteLine($"{insectName.PadRight(maxWidth)} {string.Join(", ", Cache.GetDownloader(insectName).GetLevels())}");
+                }
+
+                return;
+            }
+
+            /* TODO if level is not specified, but wallpaper size is, choose appropriate level */
+            var insects = Download(AllDownload ? Cache.InsectList : insectNames).ToList();
+
+            /* TODO handle wallpaper creation for list of insects */
         }
 
-        private static void DownloadAll()
+        private bool TryGetInsects(CommandLineApplication app, out IReadOnlyCollection<string> insectNames)
         {
-            // Create download folder
-            const string downloadFolder = "download";
-            
+            if (AllDownload)
+            {
+                insectNames = Cache.InsectList;
+                return true;
+            }
 
+            if (string.IsNullOrWhiteSpace(Insect))
+            {
+                app.Error.WriteLine("Error: Either -a or insect has to be set.\n");
+                app.ShowHelp();
+                insectNames = null;
+                return false;
+            }
+
+            if (!Cache.InsectList.Contains(Insect.ToLower().Trim()))
+            {
+                app.Error.WriteLine($"Could not find {Insect}. Use \"--list\" to show valid insects.");
+                app.ShowHint();
+                insectNames = null;
+                return false;
+            }
+
+            if (Level.HasValue && !Cache.GetDownloader(Insect.ToLower().Trim()).GetLevels().Contains(Level.Value))
+            {
+                app.Error.WriteLine($"Could not find resolution {Level} on insect {Insect}. Use \"--resolutions\" to show valid resolutions for an insect.");
+                app.ShowHint();
+                insectNames = null;
+                return false;
+            }
+
+            insectNames = new[] { Insect.ToLower().Trim() };
+            return true;
+        }
+
+        private IEnumerable<string> Download(IReadOnlyCollection<string> insectNames)
+        {
             using (var progressBar = new ProgressBar(2, "Collecting resolutions for all insects"))
             {
                 // Get all zoom levels
-                var allLevels = Cache.InsectList.Select(Cache.GetDownloader)
-                                     .SelectMany(loader => loader.GetLevels())
-                                     .Distinct()
-                                     .OrderBy(level => level)
-                                     .ToList();
-                progressBar.Tick("Downloading images for all levels");
+                var allLevels = Level.HasValue
+                    ? new List<int> { Level.Value }
+                    : insectNames.Select(Cache.GetDownloader)
+                           .SelectMany(loader => loader.GetLevels())
+                           .Distinct()
+                           .OrderBy(level => level)
+                           .ToList();
+                progressBar.Tick("Downloading images for these resolutions: " + string.Join(", ", allLevels));
 
                 // Download by zoom levels
-                using (var downloadProgressBar = progressBar.Spawn(allLevels.Count, string.Empty))
+                using (var downloadProgressBar = progressBar.Spawn(allLevels.Count + 1, string.Empty))
                 {
                     foreach (var level in allLevels)
                     {
                         downloadProgressBar.Tick($"Downloading resolution {level}");
 
-                        var insects = Cache.InsectList
-                                           .Where(insect => Cache.GetDownloader(insect).GetLevels().Contains(level))
-                                           .ToList();
+                        var insects = insectNames
+                                     .Where(insect => Cache.GetDownloader(insect).GetLevels().Contains(level))
+                                     .ToList();
 
                         var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
                         using (var levelProgressBar = downloadProgressBar.Spawn(insects.Count * 2, string.Empty, progressOptions))
                         {
                             foreach (var insect in insects)
                             {
-                                Cache.Get(insect, level, false, levelProgressBar);
+                                yield return Cache.Get(insect, level, ForceDownload, levelProgressBar);
                             }
 
                             levelProgressBar.Tick($"Downloaded resolution {level}");

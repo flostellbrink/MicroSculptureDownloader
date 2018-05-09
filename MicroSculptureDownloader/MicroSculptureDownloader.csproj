@@ -12,6 +12,7 @@
   </ItemGroup>
     
   <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.2" />
     <PackageReference Include="ShellProgressBar" Version="4.0.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003" />
