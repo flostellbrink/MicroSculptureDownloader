@@ -1,4 +1,4 @@
-# Unofficial MicroSculpture Downloader [![Build Status](https://travis-ci.org/Owlinated/MicroSculptureDownloader.svg?branch=master)](https://travis-ci.org/Owlinated/MicroSculptureDownloader)
+# Unofficial MicroSculpture Downloader [![Build Status](https://travis-ci.org/flostellbrink/MicroSculptureDownloader.svg?branch=master)](https://travis-ci.org/Owlinated/MicroSculptureDownloader)
 This program assists in downloading the brilliant insect photographs from [MicroSculpture](http://microsculpture.net/).
 
 ## Please respect the artist
