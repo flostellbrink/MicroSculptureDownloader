@@ -3,7 +3,7 @@ This program assists in downloading the brilliant insect photographs from [Micro
 
 ## Please respect the artist
 Obviously you do not gain any copyright on the pictures by using this software. So do not distribute or sell them!  
-If you enjoy the pictures consider supporting Levon Biss by visiting an exhibition or purchasing his book. You can find more information on [his website](https://www.levonbiss.com/blog/).
+If you enjoy the pictures consider supporting Levon Biss by visiting an exhibition or purchasing his book. You can find more information on [his website](https://www.levonbiss.com/).
 
 ## Usage
 - Install [.Net Core](https://www.microsoft.com/net/learn/get-started/)
