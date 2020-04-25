@@ -21,8 +21,9 @@ namespace MicroSculptureDownloader.Core
         /// <param name="cacheDirectory">Directory to cache images in.</param>
         public ImageCache(string cacheDirectory = "download")
         {
-            Directory.CreateDirectory(cacheDirectory);
-            CacheDirectory = cacheDirectory;
+            CacheDirectory = Directory.CreateDirectory(cacheDirectory);
+            Console.WriteLine($"Caching images in {CacheDirectory.FullName}");
+
             var homePage = new WebClient().DownloadString("http://microsculpture.net/");
             var insectPattern = "<a href=\"(?<insect>[a-z\\-]+)\\.html\">";
             var insectMatches = Regex.Matches(homePage, insectPattern);
@@ -37,7 +38,7 @@ namespace MicroSculptureDownloader.Core
         private ConcurrentDictionary<string, MicroSculptureImage> MicroSculptureImageCache { get; } =
             new ConcurrentDictionary<string, MicroSculptureImage>();
 
-        private string CacheDirectory { get; }
+        private DirectoryInfo CacheDirectory { get; }
 
         /// <summary>
         /// Get the path to a specific image. Uses already downloaded first.

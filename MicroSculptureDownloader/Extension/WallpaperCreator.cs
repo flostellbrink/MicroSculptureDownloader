@@ -18,14 +18,14 @@ namespace MicroSculptureDownloader.Extension
         /// </summary>
         public WallpaperCreator(string wallpaperDirectory = "wallpaper")
         {
-            Directory.CreateDirectory(wallpaperDirectory);
-            WallpaperDirectory = wallpaperDirectory;
+            WallpaperDirectory = Directory.CreateDirectory(wallpaperDirectory);
+            Console.WriteLine($"Saving wallpapers in {WallpaperDirectory.FullName}");
         }
 
         /// <summary>
         /// Gets directory to save wallpapers in.
         /// </summary>
-        public string WallpaperDirectory { get; }
+        public DirectoryInfo WallpaperDirectory { get; }
 
         /// <summary>
         /// Create a wallpaper from a downloaded image.
