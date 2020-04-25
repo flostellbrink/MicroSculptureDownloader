@@ -32,14 +32,23 @@ namespace MicroSculptureDownloader.Extension
         /// </summary>
         public void CreateWallpapers(ICollection<WallpaperSource> sources, int width, int height, bool trim, int border)
         {
-            using var progressBar = new ProgressBar(sources.Count + 1, string.Empty);
+            ProgressBar progressBar = null;
+            try
+            {
+                progressBar = new ProgressBar(sources.Count + 1, string.Empty);
+            }
+            catch
+            {
+                // Ignore progress bar failure.
+            }
+
             foreach (var insect in sources)
             {
-                progressBar.Tick($"Creating wallpaper for {insect.Name}");
+                progressBar?.Tick($"Creating wallpaper for {insect.Name}");
                 try
                 {
                     var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
-                    using var wallpaperProgressBar = progressBar.Spawn(trim ? 4 : 3, "Loading image", progressOptions);
+                    using var wallpaperProgressBar = progressBar?.Spawn(trim ? 4 : 3, "Loading image", progressOptions);
 
                     var trimmed = trim ? "trimmed" : "full";
                     var wallpaperPath = $"{WallpaperDirectory}/{insect.Name}_{width}x{height}_{border}_{trimmed}.png";
@@ -51,14 +60,14 @@ namespace MicroSculptureDownloader.Extension
 
                     if (trim)
                     {
-                        wallpaperProgressBar.Tick("Trimming source image");
+                        wallpaperProgressBar?.Tick("Trimming source image");
                         inputImage.Mutate(context => context.EntropyCrop(0.01f));
                     }
 
-                    wallpaperProgressBar.Tick("Resizing source image");
+                    wallpaperProgressBar?.Tick("Resizing source image");
                     ResizeSource(inputImage, width, height, border);
 
-                    wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
+                    wallpaperProgressBar?.Tick($"Writing wallpaper to {wallpaperPath}");
                     outputImage.Mutate(context => context.DrawImage(inputImage, 1.0f));
                     outputImage.SaveAsPng(outputFile);
                 }

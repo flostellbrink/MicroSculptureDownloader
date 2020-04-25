@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.0.0
-MinimumVisualStudioVersion = 10.0.0.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroSculptureDownloader", "MicroSculptureDownloader\MicroSculptureDownloader.csproj", "{694354F7-14F8-4A3C-8A43-321771C2322F}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30002.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroSculptureDownloader", "MicroSculptureDownloader\MicroSculptureDownloader.csproj", "{694354F7-14F8-4A3C-8A43-321771C2322F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroSculptureDownloader.Test", "MicroSculptureDownloader.Test\MicroSculptureDownloader.Test.csproj", "{CEA67D7B-E2D6-45D8-B6C4-6467913FD240}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +17,15 @@ Global
 		{694354F7-14F8-4A3C-8A43-321771C2322F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{694354F7-14F8-4A3C-8A43-321771C2322F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{694354F7-14F8-4A3C-8A43-321771C2322F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEA67D7B-E2D6-45D8-B6C4-6467913FD240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEA67D7B-E2D6-45D8-B6C4-6467913FD240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEA67D7B-E2D6-45D8-B6C4-6467913FD240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEA67D7B-E2D6-45D8-B6C4-6467913FD240}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7EAB7C32-AD9C-4AA3-83F1-EF894B8F00A5}
 	EndGlobalSection
 EndGlobal

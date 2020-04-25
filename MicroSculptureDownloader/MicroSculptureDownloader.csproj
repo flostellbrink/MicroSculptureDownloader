@@ -6,6 +6,11 @@
     <WarningsAsErrors />
     <DocumentationFile>bin\MicroSculptureDownloader.xml</DocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="download\**" />
+    <EmbeddedResource Remove="download\**" />
+    <None Remove="download\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="Properties\stylecop.json" />
