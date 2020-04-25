@@ -6,14 +6,12 @@ using ShellProgressBar;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Drawing;
 using Image = SixLabors.ImageSharp.Image;
-using Point = SixLabors.Primitives.Point;
 
-namespace MicroSculptureDownloader
+namespace MicroSculptureDownloader.Core
 {
     /// <summary>
-    /// Downloads images or maps from any leaflet js powered website. https://leafletjs.com/
+    /// Downloads images or maps from any leaflet js powered website. https://leafletjs.com/.
     /// </summary>
     public class LeafletjsDownloader
     {
@@ -21,7 +19,7 @@ namespace MicroSculptureDownloader
         private static readonly ParallelOptions ParallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 4 };
 
         /// <summary>
-        /// Caller needs to dispose image!
+        /// Caller needs to dispose image.
         /// </summary>
         public static Image<Rgb24> Download(Func<TileCoordinates, string> urlGenerator, int tileSize, int totalSize, IProgressBar parentProgressBar = null)
         {
@@ -61,7 +59,7 @@ namespace MicroSculptureDownloader
                     var location = new Point(tileCoordinates.Column * tileSize, tileCoordinates.Row * tileSize);
                     lock (result)
                     {
-                        result.Mutate(context => context.DrawImage(GraphicsOptions.Default, tile, location));
+                        result.Mutate(context => context.DrawImage(tile, location, 1.0f));
                     }
                 }
             }

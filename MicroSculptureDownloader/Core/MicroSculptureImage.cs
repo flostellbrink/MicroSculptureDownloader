@@ -8,7 +8,7 @@ using ShellProgressBar;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace MicroSculptureDownloader
+namespace MicroSculptureDownloader.Core
 {
     /// <summary>
     /// Represents a specific MicroSculpture and allow downloading it at different resolutions.
@@ -63,7 +63,7 @@ namespace MicroSculptureDownloader
             new ReadOnlyCollection<ZoomModifier>(new[] { new ZoomModifier(1, 256), new ZoomModifier(2, 512) });
 
         /// <summary>
-        /// Caller needs to dispose image!
+        /// Caller needs to dispose image.
         /// </summary>
         public Image<Rgb24> DownloadImage(int? zoomLevel = null, ZoomModifier zoomModifier = null, IProgressBar parentProgressBar = null)
         {
@@ -79,7 +79,7 @@ namespace MicroSculptureDownloader
         /// <summary>
         /// Get the list of all supported zoom levels.
         /// </summary>
-        /// <param name="zoomModifier">The modifier to use for zoom levels</param>
+        /// <param name="zoomModifier">The modifier to use for zoom levels.</param>
         public ICollection<int> GetLevels(ZoomModifier zoomModifier = null)
         {
             zoomModifier = zoomModifier ?? ZoomModifiers.Last();
@@ -106,7 +106,7 @@ namespace MicroSculptureDownloader
             $"http://microsculpture.net/assets/img/tiles/{TileFolder}/{zoomModifier}/{zoomLevel}/{tileCoordinates.Column}/{tileCoordinates.Row}.jpg";
 
         /// <summary>
-        /// Caller needs to dispose image!
+        /// Caller needs to dispose image.
         /// </summary>
         private Image<Rgb24> DownloadImage(int zoomLevel, ZoomModifier zoomModifier, IProgressBar parentProgressBar = null)
         {
@@ -162,8 +162,8 @@ namespace MicroSculptureDownloader
             /// <summary>
             /// Initializes a new instance of the <see cref="ZoomModifier"/> class.
             /// </summary>
-            /// <param name="level">The used zoom level</param>
-            /// <param name="tileSize">The size of tiles (along both dimensions)</param>
+            /// <param name="level">The used zoom level.</param>
+            /// <param name="tileSize">The size of tiles (along both dimensions).</param>
             public ZoomModifier(int level, int tileSize)
             {
                 Level = level;

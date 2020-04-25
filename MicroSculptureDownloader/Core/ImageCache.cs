@@ -8,17 +8,17 @@ using System.Text.RegularExpressions;
 using ShellProgressBar;
 using SixLabors.ImageSharp;
 
-namespace MicroSculptureDownloader
+namespace MicroSculptureDownloader.Core
 {
     /// <summary>
-    /// Cache for skipping image downloads
+    /// Cache for skipping image downloads.
     /// </summary>
     public class ImageCache
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ImageCache"/> class.
         /// </summary>
-        /// <param name="cacheDirectory">Directory to cache images in</param>
+        /// <param name="cacheDirectory">Directory to cache images in.</param>
         public ImageCache(string cacheDirectory = "download")
         {
             Directory.CreateDirectory(cacheDirectory);

@@ -1,14 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using McMaster.Extensions.CommandLineUtils;
+using MicroSculptureDownloader.Core;
 using MicroSculptureDownloader.Extension;
 using ShellProgressBar;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Drawing;
-using SixLabors.ImageSharp.Processing.Transforms;
 
 namespace MicroSculptureDownloader
 {

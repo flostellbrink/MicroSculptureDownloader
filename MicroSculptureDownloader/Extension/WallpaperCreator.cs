@@ -5,8 +5,6 @@ using ShellProgressBar;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Drawing;
-using SixLabors.ImageSharp.Processing.Transforms;
 
 namespace MicroSculptureDownloader.Extension
 {
@@ -62,8 +60,7 @@ namespace MicroSculptureDownloader.Extension
                                 ResizeSource(inputImage, width, height, border);
 
                                 wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
-                                outputImage.Mutate(context =>
-                                    context.DrawImage(GraphicsOptions.Default, inputImage));
+                                outputImage.Mutate(context => context.DrawImage(inputImage, 1.0f));
                                 outputImage.SaveAsPng(outputFile);
                             }
                         }

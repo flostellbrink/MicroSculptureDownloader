@@ -12,11 +12,13 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.2" />
-    <PackageReference Include="ShellProgressBar" Version="4.0.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta006" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
+    <PackageReference Include="ShellProgressBar" Version="5.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-unstable1129" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
     
   <ItemGroup>
