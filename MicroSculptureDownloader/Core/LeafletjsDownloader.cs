@@ -53,14 +53,13 @@ namespace MicroSculptureDownloader.Core
                 var data = new WebClient().DownloadData(url);
 
                 // Parse image and dispose of it later
-                using (var tile = Image.Load<Rgb24>(data))
+                using var tile = Image.Load<Rgb24>(data);
+
+                // Add tile to result
+                var location = new Point(tileCoordinates.Column * tileSize, tileCoordinates.Row * tileSize);
+                lock (result)
                 {
-                    // Add tile to result
-                    var location = new Point(tileCoordinates.Column * tileSize, tileCoordinates.Row * tileSize);
-                    lock (result)
-                    {
-                        result.Mutate(context => context.DrawImage(tile, location, 1.0f));
-                    }
+                    result.Mutate(context => context.DrawImage(tile, location, 1.0f));
                 }
             }
             catch (Exception exception)

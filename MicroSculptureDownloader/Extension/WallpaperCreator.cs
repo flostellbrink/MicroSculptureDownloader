@@ -32,43 +32,39 @@ namespace MicroSculptureDownloader.Extension
         /// </summary>
         public void CreateWallpapers(ICollection<WallpaperSource> sources, int width, int height, bool trim, int border)
         {
-            using (var progressBar = new ProgressBar(sources.Count + 1, string.Empty))
+            using var progressBar = new ProgressBar(sources.Count + 1, string.Empty);
+            foreach (var insect in sources)
             {
-                foreach (var insect in sources)
+                progressBar.Tick($"Creating wallpaper for {insect.Name}");
+                try
                 {
-                    progressBar.Tick($"Creating wallpaper for {insect.Name}");
-                    try
+                    var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
+                    using var wallpaperProgressBar = progressBar.Spawn(trim ? 4 : 3, "Loading image", progressOptions);
+
+                    var trimmed = trim ? "trimmed" : "full";
+                    var wallpaperPath = $"{WallpaperDirectory}/{insect.Name}_{width}x{height}_{border}_{trimmed}.png";
+
+                    using var inputFile = new FileStream(insect.Path, FileMode.Open);
+                    using var inputImage = Image.Load<Rgb24>(inputFile);
+                    using var outputImage = new Image<Rgb24>(width, height);
+                    using var outputFile = new FileStream(wallpaperPath, FileMode.Create);
+
+                    if (trim)
                     {
-                        var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
-                        using (var wallpaperProgressBar = progressBar.Spawn(trim ? 4 : 3, "Loading image", progressOptions))
-                        {
-                            var trimmed = trim ? "trimmed" : "full";
-                            var wallpaperPath = $"{WallpaperDirectory}/{insect.Name}_{width}x{height}_{border}_{trimmed}.png";
-
-                            using (var inputFile = new FileStream(insect.Path, FileMode.Open))
-                            using (var inputImage = Image.Load<Rgb24>(inputFile))
-                            using (var outputImage = new Image<Rgb24>(width, height))
-                            using (var outputFile = new FileStream(wallpaperPath, FileMode.Create))
-                            {
-                                if (trim)
-                                {
-                                    wallpaperProgressBar.Tick("Trimming source image");
-                                    inputImage.Mutate(context => context.EntropyCrop(0.01f));
-                                }
-
-                                wallpaperProgressBar.Tick("Resizing source image");
-                                ResizeSource(inputImage, width, height, border);
-
-                                wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
-                                outputImage.Mutate(context => context.DrawImage(inputImage, 1.0f));
-                                outputImage.SaveAsPng(outputFile);
-                            }
-                        }
+                        wallpaperProgressBar.Tick("Trimming source image");
+                        inputImage.Mutate(context => context.EntropyCrop(0.01f));
                     }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine($"Error in wallpaper {insect.Name} from {insect.Path} - {exception.Message}");
-                    }
+
+                    wallpaperProgressBar.Tick("Resizing source image");
+                    ResizeSource(inputImage, width, height, border);
+
+                    wallpaperProgressBar.Tick($"Writing wallpaper to {wallpaperPath}");
+                    outputImage.Mutate(context => context.DrawImage(inputImage, 1.0f));
+                    outputImage.SaveAsPng(outputFile);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine($"Error in wallpaper {insect.Name} from {insect.Path} - {exception.Message}");
                 }
             }
         }

@@ -82,7 +82,7 @@ namespace MicroSculptureDownloader.Core
         /// <param name="zoomModifier">The modifier to use for zoom levels.</param>
         public ICollection<int> GetLevels(ZoomModifier zoomModifier = null)
         {
-            zoomModifier = zoomModifier ?? ZoomModifiers.Last();
+            zoomModifier ??= ZoomModifiers.Last();
             if (!ZoomModifiers.Contains(zoomModifier))
             {
                 throw new ArgumentOutOfRangeException(nameof(zoomModifier));
@@ -155,7 +155,7 @@ namespace MicroSculptureDownloader.Core
 
         /// <summary>
         /// Stores the zoom level modifier.
-        /// Micro Sculputures can be viewed at different zoom levels, depending on client screen resolution.
+        /// Micro Sculptures can be viewed at different zoom levels, depending on client screen resolution.
         /// </summary>
         public class ZoomModifier
         {

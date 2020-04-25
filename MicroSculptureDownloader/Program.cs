@@ -149,41 +149,36 @@ namespace MicroSculptureDownloader
 
         private IEnumerable<string> Download(IReadOnlyCollection<string> insectNames)
         {
-            using (var progressBar = new ProgressBar(2, "Collecting resolutions for all insects"))
+            using var progressBar = new ProgressBar(2, "Collecting resolutions for all insects");
+
+            // Get all zoom levels
+            var allLevels = Level.HasValue
+                ? new List<int> { Level.Value }
+                : insectNames.Select(Cache.GetDownloader)
+                    .SelectMany(loader => loader.GetLevels())
+                    .Distinct()
+                    .OrderBy(level => level)
+                    .ToList();
+            progressBar.Tick("Downloading images for these resolutions: " + string.Join(", ", allLevels));
+
+            // Download by zoom levels
+            using var downloadProgressBar = progressBar.Spawn(allLevels.Count + 1, string.Empty);
+            foreach (var level in allLevels)
             {
-                // Get all zoom levels
-                var allLevels = Level.HasValue
-                    ? new List<int> { Level.Value }
-                    : insectNames.Select(Cache.GetDownloader)
-                           .SelectMany(loader => loader.GetLevels())
-                           .Distinct()
-                           .OrderBy(level => level)
-                           .ToList();
-                progressBar.Tick("Downloading images for these resolutions: " + string.Join(", ", allLevels));
+                downloadProgressBar.Tick($"Downloading resolution {level}");
 
-                // Download by zoom levels
-                using (var downloadProgressBar = progressBar.Spawn(allLevels.Count + 1, string.Empty))
+                var insects = insectNames
+                    .Where(insect => Cache.GetDownloader(insect).GetLevels().Contains(level))
+                    .ToList();
+
+                var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
+                using var levelProgressBar = downloadProgressBar.Spawn(insects.Count * 2, string.Empty, progressOptions);
+                foreach (var insect in insects)
                 {
-                    foreach (var level in allLevels)
-                    {
-                        downloadProgressBar.Tick($"Downloading resolution {level}");
-
-                        var insects = insectNames
-                                     .Where(insect => Cache.GetDownloader(insect).GetLevels().Contains(level))
-                                     .ToList();
-
-                        var progressOptions = new ProgressBarOptions { CollapseWhenFinished = false };
-                        using (var levelProgressBar = downloadProgressBar.Spawn(insects.Count * 2, string.Empty, progressOptions))
-                        {
-                            foreach (var insect in insects)
-                            {
-                                yield return Cache.Get(insect, level, ForceDownload, levelProgressBar);
-                            }
-
-                            levelProgressBar.Tick($"Downloaded resolution {level}");
-                        }
-                    }
+                    yield return Cache.Get(insect, level, ForceDownload, levelProgressBar);
                 }
+
+                levelProgressBar.Tick($"Downloaded resolution {level}");
             }
         }
     }

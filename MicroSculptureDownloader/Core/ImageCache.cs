@@ -56,8 +56,8 @@ namespace MicroSculptureDownloader.Core
             }
 
             using (var image = downloader.DownloadImage(level, null, progressBar))
-            using (var stream = new FileStream(path, FileMode.Create))
             {
+                using var stream = new FileStream(path, FileMode.Create);
                 progressBar?.Tick($"Saving {path}");
                 image.SaveAsPng(stream);
             }
