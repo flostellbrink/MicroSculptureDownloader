@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MicroSculptureDownloader": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}
